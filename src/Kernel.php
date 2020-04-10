@@ -71,7 +71,7 @@ abstract class Kernel extends BaseKernel
 
         $this->logToStderr(sprintf(
             'cache directory prepared in %s ms.',
-            number_format((microtime(true) - $startTime) * 1000)
+            number_format((microtime(true) - $startTime) * 1000, 2)
         ));
     }
 
