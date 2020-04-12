@@ -67,6 +67,7 @@ abstract class BrefKernel extends Kernel
         $filesystem->mkdir($writeDir);
 
         foreach (scandir($readOnlyDir, SCANDIR_SORT_NONE) as $item) {
+            $itemStartTime = microtime(true);
             if (in_array($item, ['.', '..'])) {
                 continue;
             }
@@ -74,6 +75,8 @@ abstract class BrefKernel extends Kernel
             // Copy directories to a writable space on Lambda.
             if (in_array($item, $cacheDirectoriesToCopy)) {
                 $filesystem->mirror("$readOnlyDir/$item", "$writeDir/$item");
+                $this->logToStderr(sprintf('Handled "%s" in %s ms.', $item, number_format((microtime(true) - $itemStartTime) * 1000, 2)));
+
                 continue;
             }
 
@@ -81,11 +84,14 @@ abstract class BrefKernel extends Kernel
             // This is especially important with the Container* directories since it uses require_once statements
             if (is_dir("$readOnlyDir/$item")) {
                 $filesystem->symlink("$readOnlyDir/$item", "$writeDir/$item");
+                $this->logToStderr(sprintf('Handled "%s" in %s ms.', $item, number_format((microtime(true) - $itemStartTime) * 1000, 2)));
+
                 continue;
             }
 
             // Copy all other files.
             $filesystem->copy("$readOnlyDir/$item", "$writeDir/$item");
+            $this->logToStderr(sprintf('Handled "%s" in %s ms.', $item, number_format((microtime(true) - $itemStartTime) * 1000, 2)));
         }
 
         $this->logToStderr(sprintf(
